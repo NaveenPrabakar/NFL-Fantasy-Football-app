@@ -2,16 +2,24 @@ package com.example.demo.User;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
 public class AuthenticateTest {
 
+    @Autowired
+    private UserRepo userRepo;
+
+    @Autowired
     private Authenticate auth;
 
     @BeforeEach
     public void setUp() {
-        auth = new Authenticate();
+        // clear repository to ensure tests run against a clean state
+        userRepo.deleteAll();
     }
 
     @Test
