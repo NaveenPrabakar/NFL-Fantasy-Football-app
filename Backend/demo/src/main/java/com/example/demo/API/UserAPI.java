@@ -1,6 +1,7 @@
 package com.example.demo.API;
 
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,6 +10,7 @@ import com.example.demo.User.User;
 
 import com.example.demo.User.UserController;
 import com.example.demo.User.Authenticate;
+import com.example.demo.User.Settings;
 
 
 @RestController
@@ -37,5 +39,16 @@ public class UserAPI {
             return false;
         }
         return true; 
+    }
+
+    @PutMapping("/update")
+    public String updateUserProfile(@RequestBody User user, String whatChanged) {
+
+        Settings userSettings = new Settings();
+        boolean isUpdated = userSettings.updateUserProfile(user, whatChanged);
+        if (!isUpdated) {
+            return "Failed to update user profile.";
+        }
+        return "User profile updated successfully.";
     }
 }
