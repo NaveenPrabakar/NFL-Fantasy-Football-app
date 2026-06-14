@@ -1,0 +1,33 @@
+
+// Register User
+curl -X POST "http://localhost:8080/user/register" \
+-H "Content-Type: application/json" \
+-d '{
+  "name": "John Doe",
+  "email": "john@gmail.com",
+  "password": "123456"
+}'
+
+// Log in User
+curl -X POST "http://localhost:8080/user/login" \
+-H "Content-Type: application/json" \
+-d '{
+  "email": "john@gmail.com",
+  "password": "123456"
+}'
+
+// Update User profile
+curl -X PUT "http://localhost:8080/user/update?whatChanged=name" \
+-H "Content-Type: application/json" \
+-d '{
+  "email": "john@gmail.com",
+  "name": "Johnny"
+}'
+
+curl -X PUT "http://localhost:8080/user/update?whatChanged=password" \
+-H "Content-Type: application/json" \
+-d '{
+  "email": "john@gmail.com",
+  "password": "newPassword123"
+}'
+

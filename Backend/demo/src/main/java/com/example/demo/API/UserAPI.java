@@ -5,10 +5,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.demo.User.User;
 
-import com.example.demo.User.UserController;
 import com.example.demo.User.Authenticate;
 import com.example.demo.User.Settings;
 
@@ -16,12 +16,19 @@ import com.example.demo.User.Settings;
 @RestController
 @RequestMapping("/user")
 public class UserAPI {
+
+    private final Authenticate authenticate;
+    private final Settings settings;
+
+    public UserAPI(Authenticate authenticate, Settings settings) {
+        this.authenticate = authenticate;
+        this.settings = settings;
+    }
     
     @PostMapping("/register")
     public String registerUser(@RequestBody User user) {
         
-        UserController userController = new Authenticate();
-        boolean isRegistered = userController.registerUser(user);
+        boolean isRegistered = authenticate.registerUser(user);
 
         if (!isRegistered) {
             return "Email already registered.";
@@ -32,8 +39,7 @@ public class UserAPI {
     @PostMapping("/login")
     public boolean loginUser(@RequestBody User user) {
         
-        UserController userController = new Authenticate();
-        boolean isAuthenticated = userController.loginUser(user);
+        boolean isAuthenticated = authenticate.loginUser(user);
 
         if (!isAuthenticated) {
             return false;
@@ -42,10 +48,10 @@ public class UserAPI {
     }
 
     @PutMapping("/update")
-    public String updateUserProfile(@RequestBody User user, String whatChanged) {
+    public String updateUserProfile(@RequestBody User user, @RequestParam String whatChanged) {
 
-        Settings userSettings = new Settings();
-        boolean isUpdated = userSettings.updateUserProfile(user, whatChanged);
+    
+        boolean isUpdated = settings.updateUserProfile(user, whatChanged);
         if (!isUpdated) {
             return "Failed to update user profile.";
         }
