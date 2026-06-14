@@ -39,9 +39,9 @@ public class UserAPI {
     @PostMapping("/login")
     public boolean loginUser(@RequestBody User user) {
         
-        boolean isAuthenticated = authenticate.loginUser(user);
+        User loggedin = authenticate.loginUser(user);
 
-        if (!isAuthenticated) {
+        if (loggedin == null) {
             return false;
         }
         return true; 

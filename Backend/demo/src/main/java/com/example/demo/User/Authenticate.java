@@ -30,15 +30,16 @@ public class Authenticate implements UserController {
     }
 
     @Override
-    public boolean loginUser(User user) {
+    public User loginUser(User user) {
 
         User existingUser = userRepo.findByEmail(user.getEmail());
         if (existingUser != null && existingUser.getPassword().equals(user.getPassword())) {
             System.out.println("Login successful.");
-            return true;
+            existingUser.setPassword(null);
+            return existingUser;
         }
         System.out.println("Invalid email or password.");
-        return false;
+        return null;
 
     }
 

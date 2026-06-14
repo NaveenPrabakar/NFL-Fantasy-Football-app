@@ -13,7 +13,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import { loginUser, registerUser } from '@/services/auth-api';
+import { SignedInHome } from '@/components/signed-in-home';
+import { SettingsPanel } from '@/components/user-settings';
+import { loginUser, registerUser, type AuthenticatedUser } from '@/services/auth-api';
 
 type AuthMode = 'login' | 'register';
 
@@ -49,6 +51,8 @@ export function AuthScreen({ mode }: AuthScreenProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [hasError, setHasError] = useState(false);
+  const [authenticatedUser, setAuthenticatedUser] = useState<AuthenticatedUser | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   const canSubmit = useMemo(() => {
     const hasRequiredName = !isRegister || name.trim().length > 0;
@@ -73,12 +77,19 @@ export function AuthScreen({ mode }: AuthScreenProps) {
         });
         setStatusMessage(message || copy.successMessage);
       } else {
-        const isAuthenticated = await loginUser({
+        const user = await loginUser({
           email: email.trim(),
           password,
         });
-        setHasError(!isAuthenticated);
-        setStatusMessage(isAuthenticated ? copy.successMessage : 'Invalid email or password.');
+
+        if (!user) {
+          setHasError(true);
+          setStatusMessage('Invalid email or password.');
+        } else {
+          setAuthenticatedUser(user);
+          setHasError(false);
+          setStatusMessage(copy.successMessage);
+        }
       }
     } catch (error) {
       setHasError(true);
@@ -86,6 +97,24 @@ export function AuthScreen({ mode }: AuthScreenProps) {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  const handleOpenSettings = () => setShowSettings(true);
+  const handleCloseSettings = () => setShowSettings(false);
+  const handleSignOut = () => {
+    setAuthenticatedUser(null);
+    setShowSettings(false);
+    setPassword('');
+    setStatusMessage('');
+    setHasError(false);
+  };
+
+  if (authenticatedUser && mode === 'login') {
+    return showSettings ? (
+      <SettingsPanel user={authenticatedUser} onBack={handleCloseSettings} onUpdateUser={setAuthenticatedUser} />
+    ) : (
+      <SignedInHome user={authenticatedUser} onOpenSettings={handleOpenSettings} onSignOut={handleSignOut} />
+    );
   }
 
   return (
