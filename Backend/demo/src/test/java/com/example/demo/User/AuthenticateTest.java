@@ -26,7 +26,7 @@ public class AuthenticateTest {
         User alice = new User("Alice", "alice@example.com", "password123");
 
         assertTrue(auth.registerUser(alice));
-        assertTrue(auth.loginUser(
+        assertNotNull(auth.loginUser(
                 new User(null, "alice@example.com", "password123")));
     }
 
@@ -38,10 +38,10 @@ public class AuthenticateTest {
         assertFalse(auth.registerUser(
                 new User("Bobby", "bob@example.com", "pwd2")));
 
-        assertTrue(auth.loginUser(
+        assertNotNull(auth.loginUser(
                 new User(null, "bob@example.com", "pwd")));
 
-        assertFalse(auth.loginUser(
+        assertNull(auth.loginUser(
                 new User(null, "bob@example.com", "pwd2")));
     }
 
@@ -50,13 +50,13 @@ public class AuthenticateTest {
         auth.registerUser(
                 new User("Carol", "carol@example.com", "s3cr3t"));
 
-        assertFalse(auth.loginUser(
+        assertNull(auth.loginUser(
                 new User(null, "carol@example.com", "wrongpass")));
     }
 
     @Test
     public void testLoginUnknownEmail() {
-        assertFalse(auth.loginUser(
+        assertNull(auth.loginUser(
                 new User(null, "unknown@example.com", "password")));
     }
 
@@ -82,7 +82,7 @@ public class AuthenticateTest {
         auth.registerUser(
                 new User("Bob", "bob@example.com", "bobpass"));
 
-        assertFalse(auth.loginUser(
+        assertNull(auth.loginUser(
                 new User(null, "alice@example.com", "bobpass")));
     }
 
@@ -123,10 +123,10 @@ public class AuthenticateTest {
         auth.registerUser(
                 new User("Frank2", "frank@example.com", "newpass"));
 
-        assertTrue(auth.loginUser(
+        assertNotNull(auth.loginUser(
                 new User(null, "frank@example.com", "original")));
 
-        assertFalse(auth.loginUser(
+        assertNull(auth.loginUser(
                 new User(null, "frank@example.com", "newpass")));
     }
 }
