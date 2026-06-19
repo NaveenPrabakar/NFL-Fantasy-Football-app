@@ -1,5 +1,9 @@
 import { SymbolView } from 'expo-symbols';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
+
+import SearchBar from '@/components/search/SearchBar';
+import PlayerCard from '@/components/search/PlayerCard';
 
 import { ThemedText } from '@/components/themed-text';
 import type { AuthenticatedUser } from '@/services/auth-api';
@@ -15,6 +19,23 @@ export function SignedInHome({
   onOpenSettings,
   onSignOut,
 }: SignedInHomeProps) {
+  const router = useRouter();
+
+  const topPlayers = [
+    { id: 1, name: 'Patrick Mahomes', position: 'QB', team: 'KC' },
+    { id: 2, name: 'Josh Allen', position: 'QB', team: 'BUF' },
+  ];
+
+  const standings = [
+    { team: 'KC', wins: 12, losses: 4 },
+    { team: 'BUF', wins: 11, losses: 5 },
+    { team: 'MIN', wins: 10, losses: 6 },
+  ];
+
+  function goToSearch() {
+    router.push('/search');
+  }
+
   return (
     <View style={styles.screen}>
       <View style={styles.backgroundAccents}>
@@ -50,18 +71,13 @@ export function SignedInHome({
         </View>
 
         <View style={styles.copy}>
-          <ThemedText style={styles.eyebrow}>
-            Welcome back
-          </ThemedText>
+          <ThemedText style={styles.eyebrow}>Welcome back</ThemedText>
+          <ThemedText style={styles.title}>Hi, {user.name}</ThemedText>
+          <ThemedText style={styles.subtitle}>Your account is connected — here are the latest updates for your teams.</ThemedText>
 
-          <ThemedText style={styles.title}>
-            Hi, {user.name}
-          </ThemedText>
-
-          <ThemedText style={styles.subtitle}>
-            Your account is authenticated and connected to the backend.
-            Profile management and settings updates are available.
-          </ThemedText>
+          <View style={styles.quickSearchRow}>
+            <SearchBar value={''} onChange={() => {}} onSearch={goToSearch} placeholder="Search players, teams, positions" />
+          </View>
         </View>
 
         <View style={styles.statusCard}>
@@ -103,31 +119,40 @@ export function SignedInHome({
             </ThemedText>
           </View>
         </View>
+        <View style={styles.rowSplit}>
+          <View style={styles.column}>
+            <ThemedText style={styles.sectionTitle}>Next Game</ThemedText>
+            <View style={styles.nextGameCard}>
+              <ThemedText style={styles.nextGameTeams}>KC vs BUF</ThemedText>
+              <ThemedText style={styles.nextGameWhen}>Sun • 1:00 PM</ThemedText>
+            </View>
 
-        <View style={styles.actionGroup}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={onOpenSettings}
-            style={({ pressed }) => [
-              styles.primaryButton,
-              pressed && styles.primaryButtonPressed,
-            ]}>
-            <ThemedText style={styles.primaryButtonText}>
-              Open Settings
-            </ThemedText>
-          </Pressable>
+            <ThemedText style={[styles.sectionTitle, { marginTop: 12 }]}>Top Players</ThemedText>
+            {topPlayers.map((p) => (
+              <PlayerCard key={p.id} player={p} />
+            ))}
 
-          <Pressable
-            accessibilityRole="button"
-            onPress={onSignOut}
-            style={({ pressed }) => [
-              styles.secondaryButton,
-              pressed && styles.secondaryButtonPressed,
-            ]}>
-            <ThemedText style={styles.secondaryButtonText}>
-              Sign Out
-            </ThemedText>
-          </Pressable>
+            <ThemedText style={[styles.sectionTitle, { marginTop: 12 }]}>Standings</ThemedText>
+            <View style={styles.standings}>
+              {standings.map((s) => (
+                <View key={s.team} style={styles.standRow}>
+                  <ThemedText style={styles.standTeam}>{s.team}</ThemedText>
+                  <ThemedText style={styles.standRecord}>{s.wins}–{s.losses}</ThemedText>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={[styles.column, styles.sideColumn]}>
+            <ThemedText style={styles.sectionTitle}>Quick Actions</ThemedText>
+            <Pressable accessibilityRole="button" onPress={goToSearch} style={styles.primaryButton}>
+              <ThemedText style={styles.primaryButtonText}>Open Player Search</ThemedText>
+            </Pressable>
+
+            <Pressable accessibilityRole="button" onPress={onSignOut} style={[styles.secondaryButton, { marginTop: 12 }]}> 
+              <ThemedText style={styles.secondaryButtonText}>Sign Out</ThemedText>
+            </Pressable>
+          </View>
         </View>
       </View>
     </View>
@@ -233,6 +258,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 
+  quickSearchRow: {
+    marginTop: 12,
+    width: '100%',
+  },
+
   eyebrow: {
     color: '#4B6BFB',
     fontSize: 13,
@@ -307,6 +337,28 @@ const styles = StyleSheet.create({
   actionGroup: {
     gap: 12,
   },
+
+  rowSplit: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+
+  column: { flex: 1 },
+
+  sideColumn: { maxWidth: 220 },
+
+  sectionTitle: { fontWeight: '800', fontSize: 14, marginBottom: 8 },
+
+  nextGameCard: { backgroundColor: '#FFFFFF', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#E5EAF2' },
+
+  nextGameTeams: { fontWeight: '800', color: '#111827' },
+
+  nextGameWhen: { color: '#5F6B7A' },
+  standings: { marginTop: 8, backgroundColor: '#FFFFFF', borderRadius: 8, borderWidth: 1, borderColor: '#E5EAF2', padding: 8 },
+  standRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
+  standTeam: { fontWeight: '700', color: '#111827' },
+  standRecord: { color: '#5F6B7A' },
 
   primaryButton: {
     alignItems: 'center',
