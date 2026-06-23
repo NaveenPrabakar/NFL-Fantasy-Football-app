@@ -41,7 +41,13 @@ public class DataClient implements DataProvider {
      */
     @Override
     public List<String> selectedPlayer(String id) {
-        FindIterable<Document> player = mongoClient.getDatabase("Football").getCollection("Players").find(new Document("player.player_id", id));
+        String normalizedId = id == null ? "" : id.trim();
+
+        Document query = new Document("player_id", normalizedId);
+        FindIterable<Document> player = mongoClient.getDatabase("Football")
+            .getCollection("Players")
+            .find(query);
+
         List<String> jsonList = convertToJSON(player);
         return jsonList;
     }
