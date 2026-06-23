@@ -1,44 +1,86 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
-import { SymbolView } from 'expo-symbols';
-
-type Player = {
-  id?: string | number;
-  name: string;
-  team?: string;
-  position?: string;
-  stats?: Record<string, any>;
-};
+import type { PlayerRecord } from '@/services/player-api';
 
 type Props = {
-  player: Player;
-  onPress?: (p: Player) => void;
+  playerRecord: PlayerRecord;
+  onPress?: (p: PlayerRecord) => void;
 };
 
-export default function PlayerCard({ player, onPress }: Props) {
+export default function PlayerCard({ playerRecord, onPress }: Props) {
   const router = useRouter();
+  const { player, player_id, passing, receiving, rushing } = playerRecord;
 
-  function handlePress() {
-    if (onPress) return onPress(player);
-    const id = player.id ?? player.name;
-    // Navigate to player details route using named route + params
-    router.push({ pathname: '/player/[id]', params: { id: String(id) } } as any);
+  async function handlePress() {
+    if (onPress) return onPress(playerRecord);
+
+    const targetId = player_id ?? player?.player_id ?? player?.id ?? null;
+    console.log('PlayerCard pressed:', { targetId, playerRecord });
+    console.log('PlayerCard router object:', router);
+    if (!targetId) {
+      console.warn('PlayerCard: no player id available to navigate');
+      return;
+    }
+
+    const path = `/player/${encodeURIComponent(String(targetId))}`;
+    console.log('PlayerCard navigating to', path);
+
+    try {
+      const res = await router.push(path);
+      console.log('PlayerCard router.push resolved', res);
+    } catch (err) {
+      console.error('router.push failed, attempting replace', err);
+      try {
+        const res2 = await router.replace(path);
+        console.log('PlayerCard router.replace resolved', res2);
+      } catch (err2) {
+        console.error('router.replace also failed', err2);
+      }
+    }
+  }
+
+  let statVal: number | null = null;
+  let statLabel = '';
+
+  if (player.position_group === 'QB' && passing) {
+    statVal = passing.yards;
+    statLabel = 'PASS YDS';
+  } else if (player.position_group === 'WR' && receiving) {
+    statVal = receiving.yards;
+    statLabel = 'REC YDS';
+  } else if (player.position_group === 'RB' && rushing) {
+    statVal = rushing.yards;
+    statLabel = 'RUSH YDS';
   }
 
   return (
     <Pressable onPress={handlePress} style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
       <View style={styles.row}>
-        <View style={styles.avatar}>
-          <ThemedText style={styles.avatarText}>{player.name?.charAt(0)?.toUpperCase() || '?'}</ThemedText>
+        
+        {player.headshot_url && (
+          <Image source={{ uri: player.headshot_url }} style={styles.avatar} resizeMode="cover" />
+        )}
+
+        <View style={styles.infoContainer}>
+          <ThemedText style={styles.name}>{player.display_name || player.name}</ThemedText>
+          <View style={styles.metaRow}>
+            <View style={styles.badge}>
+              <ThemedText style={styles.badgeText}>{player.position}</ThemedText>
+            </View>
+            <ThemedText style={styles.seasonText}>Season {playerRecord.season}</ThemedText>
+          </View>
         </View>
 
-        <View style={styles.copy}>
-          <ThemedText style={styles.name}>{player.name}</ThemedText>
-          <ThemedText style={styles.meta}>{player.position || 'N/A'} — {player.team || 'Unknown'}</ThemedText>
-        </View>
-        <View style={styles.chev}>
-          <ThemedText style={{ color: '#9AA3AF', fontSize: 18 }}>›</ThemedText>
+        {statVal !== null && (
+          <View style={styles.statBox}>
+            <ThemedText style={styles.statVal}>{statVal.toLocaleString()}</ThemedText>
+            <ThemedText style={styles.statLabel}>{statLabel}</ThemedText>
+          </View>
+        )}
+
+        <View style={styles.actionIndicator}>
+          <ThemedText style={styles.arrow}>➔</ThemedText>
         </View>
       </View>
     </Pressable>
@@ -46,27 +88,19 @@ export default function PlayerCard({ player, onPress }: Props) {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E5EAF2',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    marginVertical: 8,
-  },
-  cardPressed: { opacity: 0.9 },
-  row: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  avatar: {
-    alignItems: 'center',
-    backgroundColor: '#111827',
-    borderRadius: 8,
-    height: 48,
-    justifyContent: 'center',
-    width: 48,
-  },
-  avatarText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
-  copy: { gap: 4, flex: 1 },
-  chev: { justifyContent: 'center', alignItems: 'center', width: 28 },
-  name: { color: '#111827', fontSize: 16, fontWeight: '700' },
-  meta: { color: '#5F6B7A', fontSize: 13 },
+  card: { backgroundColor: '#FFFFFF', borderRadius: 12, padding: 12, marginVertical: 4, borderWidth: 1, borderColor: '#E2E8F0' },
+  cardPressed: { opacity: 0.85, transform: [{ scale: 0.99 }] },
+  row: { flexDirection: 'row', alignItems: 'center' },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#F1F5F9' },
+  infoContainer: { flex: 1, marginLeft: 12, justifyContent: 'center' },
+  name: { color: '#0F172A', fontSize: 15, fontWeight: '700' },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  badge: { backgroundColor: '#F1F5F9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  badgeText: { color: '#475569', fontSize: 11, fontWeight: '700' },
+  seasonText: { color: '#64748B', fontSize: 12, fontWeight: '500' },
+  statBox: { alignItems: 'flex-end', marginRight: 12 },
+  statVal: { color: '#0F172A', fontSize: 14, fontWeight: '700' },
+  statLabel: { color: '#94A3B8', fontSize: 10, fontWeight: '600' },
+  actionIndicator: { justifyContent: 'center', alignItems: 'center' },
+  arrow: { color: '#94A3B8', fontSize: 12 },
 });

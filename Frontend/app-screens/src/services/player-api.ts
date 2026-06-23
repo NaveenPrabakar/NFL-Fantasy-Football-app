@@ -1,63 +1,72 @@
 const API_BASE_URL = 'http://localhost:8080';
 
-export type Player = {
-  id?: string | number;
-  name: string;
-  position?: string;
-  team?: string;
+export type PlayerRecord = {
+  player_id: string;
+  season: number;
+  player: {
+    name: string;
+    display_name: string;
+    position: string;
+    position_group: string;
+    headshot_url?: string;
+  };
+  passing?: { yards: number; tds: number; completions: number; attempts: number; interceptions: number };
+  rushing?: { yards: number; tds: number; carries: number };
+  receiving?: { yards: number; tds: number; receptions: number; targets: number };
+  defense?: { solo_tackles: number; assist_tackles: number; interceptions: number };
+  fantasy?: { standard: number; ppr: number };
   [key: string]: any;
 };
 
-export async function searchPlayers(query: string, page = 1, pageSize = 20): Promise<{ items: Player[]; page: number; totalPages: number }> {
+export async function searchPlayers(query: string, page = 1, pageSize = 20): Promise<{ items: PlayerRecord[]; page: number; totalPages: number }> {
   if (!query || query.trim().length === 0) return { items: [], page: 1, totalPages: 1 };
+  console.log('[player-api] searchPlayers START', { query, page, pageSize });
 
-  try {
-    const res = await fetch(`${API_BASE_URL}/player/search?name=${encodeURIComponent(query)}&page=${page}&pageSize=${pageSize}`);
-    if (!res.ok) throw new Error('Player API request failed');
-    const raw = await res.json();
-    // backend may return List<String> or an object with items
-    if (Array.isArray(raw) && raw.length > 0 && typeof raw[0] === 'string') {
-      const items = raw.map((s: string) => JSON.parse(s)) as Player[];
-      return { items, page, totalPages: 1 };
-    }
-
-    if (raw && raw.items) {
-      return { items: raw.items as Player[], page: raw.page ?? page, totalPages: raw.totalPages ?? 1 };
-    }
-
-    return { items: (raw as Player[]) ?? [], page, totalPages: 1 };
-  } catch (err) {
-    // Fallback mock data when backend is unavailable
-    const mock: Player[] = [
-      { id: 1, name: 'Patrick Mahomes', position: 'QB', team: 'KC' },
-      { id: 2, name: 'Josh Allen', position: 'QB', team: 'BUF' },
-      { id: 3, name: 'Justin Jefferson', position: 'WR', team: 'MIN' },
-    ];
-
-    const filtered = mock.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()));
-    const start = (page - 1) * pageSize;
-    const items = filtered.slice(start, start + pageSize);
-    return { items, page, totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)) };
+  const url = `${API_BASE_URL}/player/search?name=${encodeURIComponent(query)}&page=${page}&pageSize=${pageSize}`;
+  console.log('[player-api] searchPlayers fetch URL', url);
+  const res = await fetch(url);
+  console.log('[player-api] searchPlayers response status', res.status, res.statusText);
+  if (!res.ok) {
+    console.error('[player-api] searchPlayers failed response', await res.text());
+    throw new Error('Player search API request failed');
   }
+
+  const raw = await res.json();
+  console.log('[player-api] searchPlayers raw', raw && (Array.isArray(raw) ? `array(${raw.length})` : Object.keys(raw || {}).slice(0,5)));
+
+  if (Array.isArray(raw)) {
+    const items = raw.map((s: string) => JSON.parse(s)) as PlayerRecord[];
+    return { items, page, totalPages: 1 };
+  }
+
+  if (raw && raw.items) {
+    const items = Array.isArray(raw.items) && typeof raw.items[0] === 'string'
+      ? raw.items.map((s: string) => JSON.parse(s))
+      : raw.items;
+    return { items: items as PlayerRecord[], page: raw.page ?? page, totalPages: raw.totalPages ?? 1 };
+  }
+
+  return { items: [], page, totalPages: 1 };
 }
 
-export async function getPlayerById(id: string | number): Promise<Player | null> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/player/selected?id=${encodeURIComponent(String(id))}`);
-    if (!res.ok) throw new Error('Player API request failed');
-    const raw = await res.json();
-    if (Array.isArray(raw) && raw.length > 0 && typeof raw[0] === 'string') {
-      return JSON.parse(raw[0]) as Player;
-    }
-    return (raw as Player) ?? null;
-  } catch (err) {
-    const mock: Player[] = [
-      { id: 1, name: 'Patrick Mahomes', position: 'QB', team: 'KC', stats: { passingYards: 5200 } },
-      { id: 2, name: 'Josh Allen', position: 'QB', team: 'BUF', stats: { passingYards: 4800 } },
-      { id: 3, name: 'Justin Jefferson', position: 'WR', team: 'MIN', stats: { receivingYards: 1700 } },
-    ];
-
-    const found = mock.find((p) => String(p.id) === String(id) || p.name === id);
-    return found ?? null;
+export async function getPlayerById(id: string | number): Promise<PlayerRecord[]> {
+  console.log('[player-api] getPlayerById START', { id });
+  const url = `${API_BASE_URL}/player/selected?id=${encodeURIComponent(String(id))}`;
+  console.log('[player-api] getPlayerById fetch URL', url);
+  const res = await fetch(url);
+  console.log('[player-api] getPlayerById status', res.status, res.statusText);
+  if (!res.ok) {
+    const body = await res.text();
+    console.error('[player-api] getPlayerById failed body', body);
+    throw new Error('Player lookup API request failed');
   }
+
+  const raw = await res.json();
+  console.log('[player-api] getPlayerById raw', raw && (Array.isArray(raw) ? `array(${raw.length})` : raw));
+  if (Array.isArray(raw)) {
+    const parsed = raw.map((s: string) => JSON.parse(s)) as PlayerRecord[];
+    console.log('[player-api] getPlayerById parsed length', parsed.length);
+    return parsed;
+  }
+  return [];
 }
