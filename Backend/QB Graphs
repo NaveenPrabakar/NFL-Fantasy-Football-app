@@ -1,0 +1,102 @@
+import nflreadpy as nfl
+import polars as pl
+import matplotlib.pyplot as plt
+
+def pick_col(df, candidates):
+    """Return the first matching column name from a list of candidates."""
+    for c in candidates:
+        if c in df.columns:
+            return c
+    return None
+
+def plot_player_stat(df, player_name, name_col, stat_col, title, ylabel):
+    player = (
+        df.filter(
+            pl.col(name_col)
+            .fill_null("")
+            .str.to_lowercase()
+            == player_name.lower()
+        )
+        .select(["season", stat_col])
+        .sort("season")
+    )
+
+    if player.height == 0:
+        raise ValueError(
+            f"No rows found for '{player_name}'. Check the spelling in {name_col}."
+        )
+
+    pdf = player.to_pandas()
+
+    plt.figure(figsize=(9, 5))
+    plt.plot(pdf["season"], pdf[stat_col], marker="o")
+
+    # Force x-axis to show only full seasons
+    plt.xticks(
+        ticks=pdf["season"],
+        labels=[str(int(x)) for x in pdf["season"]]
+    )
+
+    plt.title(title)
+    plt.xlabel("Season")
+    plt.ylabel(ylabel)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+    return player
+
+# Load regular-season player stats from 2021 onward
+seasons = list(range(2021, nfl.get_current_season() + 1))
+stats = nfl.load_player_stats(seasons=seasons, summary_level="reg")
+
+# Find column names automatically
+name_col = pick_col(stats, [
+    "player_name",
+    "player_display_name",
+    "name",
+    "full_name",
+])
+
+pass_yards_col = pick_col(stats, [
+    "passing_yards",
+    "pass_yards",
+    "passing_yds",
+])
+
+fantasy_col = pick_col(stats, [
+    "fantasy_points",
+    "fantasy_pts",
+    "fantasy_points_ppr",
+    "fantasy_pts_ppr",
+])
+
+if name_col is None:
+    raise ValueError("Could not find a player-name column.")
+if pass_yards_col is None:
+    raise ValueError("Could not find a passing-yards column.")
+if fantasy_col is None:
+    raise ValueError("Could not find a fantasy-points column.")
+
+# Enter player name here
+qb_name = "P.Mahomes"
+
+# Graph 1: Passing Yards
+plot_player_stat(
+    stats,
+    qb_name,
+    name_col,
+    pass_yards_col,
+    f"{qb_name} Regular Season Passing Yards by Season",
+    "Passing Yards",
+)
+
+# Graph 2: Fantasy Points
+plot_player_stat(
+    stats,
+    qb_name,
+    name_col,
+    fantasy_col,
+    f"{qb_name} Regular Season Fantasy Points by Season",
+    "Fantasy Points",
+)
