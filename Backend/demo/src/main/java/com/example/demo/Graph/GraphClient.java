@@ -26,7 +26,8 @@ public class GraphClient implements GraphService {
         URI uri = UriComponentsBuilder.fromUriString(graphApiBaseUrl)
             .pathSegment(position, metric, "image")
             .queryParam("player", player)
-            .build(true)
+            .encode()
+            .build()
             .toUri();
 
         try {

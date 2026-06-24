@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:8080';
+import { SPRING_API_BASE_URL } from '@/services/api-config';
+
+const API_BASE_URL = SPRING_API_BASE_URL;
 
 export type PlayerRecord = {
   player_id: string;
@@ -14,6 +16,21 @@ export type PlayerRecord = {
   rushing?: { yards: number; tds: number; carries: number };
   receiving?: { yards: number; tds: number; receptions: number; targets: number };
   defense?: { solo_tackles: number; assist_tackles: number; interceptions: number };
+  kicking?: {
+    fg?: {
+      made?: number;
+      attempts?: number;
+      missed?: number;
+      blocked?: number;
+      long?: number;
+      pct?: number;
+    };
+    pat?: {
+      made?: number;
+      attempts?: number;
+      pct?: number;
+    };
+  };
   fantasy?: { standard: number; ppr: number };
   [key: string]: any;
 };

@@ -2,6 +2,7 @@ import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import type { PlayerRecord } from '@/services/player-api';
+import { formatStatValue } from '@/utils/format';
 
 type Props = {
   playerRecord: PlayerRecord;
@@ -15,7 +16,7 @@ export default function PlayerCard({ playerRecord, onPress }: Props) {
   async function handlePress() {
     if (onPress) return onPress(playerRecord);
 
-    const targetId = player_id ?? player?.player_id ?? player?.id ?? null;
+    const targetId = player_id ?? null;
     console.log('PlayerCard pressed:', { targetId, playerRecord });
     console.log('PlayerCard router object:', router);
     if (!targetId) {
@@ -23,7 +24,7 @@ export default function PlayerCard({ playerRecord, onPress }: Props) {
       return;
     }
 
-    const path = `/player/${encodeURIComponent(String(targetId))}`;
+    const path = { pathname: '/player/[id]' as const, params: { id: String(targetId) } };
     console.log('PlayerCard navigating to', path);
 
     try {
@@ -74,7 +75,7 @@ export default function PlayerCard({ playerRecord, onPress }: Props) {
 
         {statVal !== null && (
           <View style={styles.statBox}>
-            <ThemedText style={styles.statVal}>{statVal.toLocaleString()}</ThemedText>
+            <ThemedText style={styles.statVal}>{formatStatValue(statVal)}</ThemedText>
             <ThemedText style={styles.statLabel}>{statLabel}</ThemedText>
           </View>
         )}

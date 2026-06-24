@@ -22,10 +22,10 @@ class PlotService:
         name_column = pick_column(
             stats,
             [
-                "player_name",
                 "player_display_name",
-                "name",
                 "full_name",
+                "name",
+                "player_name",
             ],
         )
         id_column = pick_column(

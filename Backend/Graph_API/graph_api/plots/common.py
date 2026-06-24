@@ -28,6 +28,20 @@ def season_totals(df: pl.DataFrame, id_column: str, player_id: str, stat_column:
     )
 
 
+def cumulative_season_totals(df: pl.DataFrame, id_column: str, player_id: str, stat_column: str) -> pl.DataFrame:
+    season_df = season_totals(df, id_column, player_id, stat_column, aggregation="sum")
+    if season_df.height == 0:
+        return season_df
+
+    cumulative_values = []
+    running_total = 0
+    for value in season_df.get_column(stat_column).to_list():
+        running_total += value or 0
+        cumulative_values.append(running_total)
+
+    return season_df.with_columns(pl.Series(stat_column, cumulative_values))
+
+
 def build_line_figure(seasons: list[int], values: list[float], title: str, ylabel: str):
     fig, ax = plt.subplots(figsize=(9, 5))
     ax.plot(seasons, values, marker="o")
@@ -64,3 +78,19 @@ def grouped_bar_figure(labels: list[str], left_values: list[float], right_values
     fig.tight_layout()
     return fig
 
+
+def bar_figure(labels: list[str], values: list[float], title: str, xlabel: str, ylabel: str):
+    import numpy as np
+
+    x = np.arange(len(labels))
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.bar(x, values, width=0.55, color="#0F172A")
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.grid(axis="y")
+    fig.tight_layout()
+    return fig
