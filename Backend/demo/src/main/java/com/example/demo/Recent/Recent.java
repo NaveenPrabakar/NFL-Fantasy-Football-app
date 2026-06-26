@@ -51,9 +51,20 @@ public class Recent {
         return searchedPlayer;
     }
 
-    public String SetPlayer(String searchedPlayer) {
-        this.searchedPlayer = searchedPlayer;
+    public String getSearchedPlayer() {
         return searchedPlayer;
+    }
+
+    public void setPlayer(String searchedPlayer) {
+        this.searchedPlayer = searchedPlayer;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
     }
 
 }

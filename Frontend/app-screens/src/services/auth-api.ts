@@ -19,6 +19,7 @@ export type UserSession = AuthenticatedUser & {
 };
 
 export type UpdateProfilePayload = {
+  currentEmail: string;
   name: string;
   email: string;
   password: string;
@@ -66,7 +67,7 @@ export async function registerUser(payload: RegisterPayload) {
 }
 
 export async function updateUserProfile(payload: UpdateProfilePayload) {
-  const response = await fetch(`${API_BASE_URL}/user/update?whatChanged=${payload.whatChanged}`, {
+  const response = await fetch(`${API_BASE_URL}/user/update?currentEmail=${encodeURIComponent(payload.currentEmail)}&whatChanged=${payload.whatChanged}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',

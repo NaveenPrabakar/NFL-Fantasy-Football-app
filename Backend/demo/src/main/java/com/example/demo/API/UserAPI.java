@@ -1,5 +1,6 @@
 package com.example.demo.API;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,21 +38,20 @@ public class UserAPI {
     }
 
     @PostMapping("/login")
-    public boolean loginUser(@RequestBody User user) {
-        
-        User loggedin = authenticate.loginUser(user);
+    public ResponseEntity<User> loginUser(@RequestBody User user) {
+        User loggedIn = authenticate.loginUser(user);
 
-        if (loggedin == null) {
-            return false;
+        if (loggedIn == null) {
+            return ResponseEntity.status(401).build();
         }
-        return true; 
+        return ResponseEntity.ok(loggedIn);
     }
 
     @PutMapping("/update")
-    public String updateUserProfile(@RequestBody User user, @RequestParam String whatChanged) {
+    public String updateUserProfile(@RequestBody User user, @RequestParam String currentEmail, @RequestParam String whatChanged) {
 
     
-        boolean isUpdated = settings.updateUserProfile(user, whatChanged);
+        boolean isUpdated = settings.updateUserProfile(user, currentEmail, whatChanged);
         if (!isUpdated) {
             return "Failed to update user profile.";
         }

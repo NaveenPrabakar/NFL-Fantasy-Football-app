@@ -21,7 +21,6 @@ public class Settings  {
      */
     private boolean changePassword(User user, String newPassword) {
         user.setPassword(newPassword);
-        userRepo.save(user);
         System.out.println("Password changed successfully.");
         return true;
     }
@@ -56,17 +55,17 @@ public class Settings  {
      * @param whatChanged
      * @return
      */
-    public boolean updateUserProfile(User user, String whatChanged) {
-        User existingUser = userRepo.findByEmail(user.getEmail());
+    public boolean updateUserProfile(User user, String currentEmail, String whatChanged) {
+        User existingUser = userRepo.findByEmail(currentEmail);
         if (existingUser == null) {
             System.out.println("User not found.");
             return false;
         }
-        if (whatChanged.equals("name")) {
+        if ("name".equals(whatChanged)) {
             changeName(existingUser, user.getName());
-        } else if (whatChanged.equals("password")) {
+        } else if ("password".equals(whatChanged)) {
             changePassword(existingUser, user.getPassword());
-        } else if (whatChanged.equals("email")) {
+        } else if ("email".equals(whatChanged)) {
             changeEmail(existingUser, user.getEmail());
         } 
         else {

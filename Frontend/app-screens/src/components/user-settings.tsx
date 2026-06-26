@@ -50,6 +50,7 @@ export function SettingsPanel({
       const whatChanged = password.length > 0 ? 'password' : 'name';
 
       await updateUserProfile({
+        currentEmail: email,
         name: name.trim(),
         email,
         password: password || 'unchanged',
